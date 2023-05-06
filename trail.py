@@ -5,6 +5,9 @@ from typing import TYPE_CHECKING, Union
 from data_structures.linked_stack import LinkedStack
 
 
+
+
+
 # Avoid circular imports for typing.
 if TYPE_CHECKING:
     from personality import WalkerPersonality
