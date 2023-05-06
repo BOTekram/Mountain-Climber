@@ -2,6 +2,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from mountain import Mountain
 from typing import TYPE_CHECKING, Union
+from data_structures.linked_stack import LinkedStack
+
+
 # Avoid circular imports for typing.
 if TYPE_CHECKING:
     from personality import WalkerPersonality
@@ -22,7 +25,11 @@ class TrailSplit:
 
 
     def remove_branch(self) -> TrailStore:
-        """Removes the branch, should just leave the remaining following trail."""
+        """
+        Removes the branch, should just leave the remaining following trail.
+        Best Time Complexity: O(1)
+        Worst Time Complexity: O(1)
+        """
         return self.path_follow.store
         
                                                                                       
@@ -48,7 +55,11 @@ class TrailSeries:
     following: Trail
 
     def remove_mountain(self) -> TrailStore:
-        """Removes the mountain at the beginning of this series."""
+        """
+        Removes the mountain at the beginning of this series.
+        Best Time Complexity: O(1)
+        Worst Time Complexity: O(1)
+        """
 
         return TrailSeries(self.mountain
                            (self.mountain.name, 0, 0), 
@@ -56,7 +67,11 @@ class TrailSeries:
         
 
     def add_mountain_before(self, mountain: Mountain) -> TrailStore:
-        """Adds a mountain in series before the current one."""
+        """
+        Adds a mountain in series before the current one.
+        Best Time Complexity: O(1)
+        Worst Time Complexity: O(1)
+        """
             
         return TrailSeries(mountain,
                            Trail( TrailSeries
@@ -66,7 +81,11 @@ class TrailSeries:
 
 
     def add_empty_branch_before(self) -> TrailStore:
-        """Adds an empty branch, where the current trailstore is now the following path."""
+        """
+        Adds an empty branch, where the current trailstore is now the following path.
+        Best Time Complexity: O(1)
+        Worst Time Complexity: O(1)
+        """
         
         return TrailSplit(Trail(None), 
                           Trail(None), 
@@ -78,13 +97,21 @@ class TrailSeries:
     
 
     def add_mountain_after(self, mountain: Mountain) -> TrailStore:
-        """Adds a mountain after the current mountain, but before the following trail."""
+        """
+        Adds a mountain after the current mountain, but before the following trail.
+        Best Time Complexity: O(1)
+        Worst Time Complexity: O(1)
+        """
 
         return TrailSeries(self.mountain, 
                            Trail(TrailSeries(mountain, self.following)))
 
     def add_empty_branch_after(self) -> TrailStore:
-        """Adds an empty branch after the current mountain, but before the following trail."""
+        """
+        Adds an empty branch after the current mountain, but before the following trail.
+        Best Time Complexity: O(1)
+        Worst Time Complexity: O(1)
+        """
         
     
     
@@ -101,16 +128,24 @@ TrailStore = Union[TrailSplit, TrailSeries, None]
 @dataclass
 class Trail:
 
-    store: TrailStore = None
+    store: TrailStore = None 
 
     def add_mountain_before(self, mountain: Mountain) -> Trail:
-        """Adds a mountain before everything currently in the trail."""
+        """
+        Adds a mountain before everything currently in the trail.
+        Best Time Complexity: O(1)
+        Worst Time Complexity: O(1)
+        """
 
         return Trail(TrailSeries(mountain, self))
 
 
     def add_empty_branch_before(self) -> Trail:
-        """Adds an empty branch before everything currently in the trail."""
+        """
+        Adds an empty branch before everything currently in the trail.
+        Best Time Complexity: O(1)
+        Worst Time Complexity: O(1)
+        """
         
         return Trail(TrailSplit(Trail(None), Trail(None), self))
         
@@ -118,19 +153,41 @@ class Trail:
     
 
     def follow_path(self, personality: WalkerPersonality) -> None:
-        """Follow a path and add mountains according to a personality."""
+        """
+        Follow a path and add mountains according to a personality.
+        Best Time Complexity: O(n) where n is the number of mountains in the trail
+        Worst Time Complexity: O(n) where n is the number of mountains in the trail
+        """
         
-        if isinstance(self.store, TrailSplit):
-            if personality.select_branch(self.store.path_top, self.store.path_bottom):
-                self.store = self.store.path_top.store
-            else:
-                self.store = self.store.path_bottom.store
-        elif isinstance(self.store, TrailSeries):
-            self.store = self.store.following.store
-        else:
-            raise ValueError("Cannot follow a path when there is no path to follow!")
+        empty = Trail(None)
 
+        call_stack = LinkedStack()
+        call_stack.push(self)
 
+        # while there are still paths to follow
+        while not call_stack.is_empty(): #Time Complexity: O(n)
+            current_trail = call_stack.pop()
+
+            if isinstance(current_trail.store, TrailSplit): #Time Complexity: O(1)
+                path_top = current_trail.store.path_top
+                path_bottom = current_trail.store.path_bottom
+                following_path = current_trail.store.path_follow
+                # push the trail following the split to the stack
+                if following_path != empty: 
+                    call_stack.push(following_path)
+                # choose the trail to take in the split based on personality and push to stack, which is processed immediately
+                if personality.select_branch(path_top, path_bottom): 
+                    call_stack.push(path_top)
+                else:
+                    call_stack.push(path_bottom)
+
+            elif isinstance(current_trail.store, TrailSeries): #Time Complexity: O(1)
+                mountain = current_trail.store.mountain
+                following_path = current_trail.store.following
+                #  adds the mountain which will be passed by the walker, and push the following trail to the stack
+                personality.add_mountain(mountain)
+                if following_path != empty:
+                    call_stack.push(following_path)
 
 
 
@@ -138,7 +195,10 @@ class Trail:
         
     def collect_all_mountains(self) -> list[Mountain]:
         """Returns a list of all mountains on the trail."""
-        raise NotImplementedError() #donot touch yet (task 1)
+
+        raise NotImplementedError()
+      
+        
         
 
     def length_k_paths(self, k) -> list[list[Mountain]]: # Input to this should not exceed k > 50, at most 5 branches.
@@ -148,6 +208,9 @@ class Trail:
 
         Paths are unique if they take a different branch, even if this results in the same set of mountains.
         """
-        raise NotImplementedError() #donot touch yet (task 1)
+        # raise NotImplementedError() 
+        
+        
+    
         
         
