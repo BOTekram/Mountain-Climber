@@ -276,21 +276,6 @@ if '__main__' == __name__:
     # dt.hash1 = lambda k: ord(k[0]) % 12
     # dt.hash2 = lambda k, sub_table: ord(k[-1]) % 5
 
-    # print(dt.hash1("Tim"), dt.hash2("Jen"))
-    # print(dt.hash1("Amy"), dt.hash2("Ben"))
-    # print(dt.hash1("May"), dt.hash2("Ben"))
-    # print(dt.hash1("Ivy"), dt.hash2("Jen"))
-    # print(dt.hash1("May"), dt.hash2("Tom"))
-    # print(dt.hash1("Tim"), dt.hash2("Bob"))
-
-    # print(dt.hash1("Tim"))
-    # print(dt.hash1("Amy"))
-    # print(dt.hash1("May"))
-    # print(dt.hash1("Ivy"))
-    # print(dt.hash1("May"))
-    # print(dt.hash1("Tim"))
-
-
     # dt["Tim", "Jen"] = 1
     # dt["Amy", "Ben"] = 2
     # dt["May", "Ben"] = 3
@@ -305,3 +290,5 @@ if '__main__' == __name__:
     # self.assertEqual(dt._linear_probe("Het", "Liz", True), (2, 2))
     # dt["Het", "Liz"] = 8 # Linear probing on external table
     # self.assertEqual(dt._linear_probe("Het", "Liz", False), (2, 2))
+    print('Hi')
+    pass
