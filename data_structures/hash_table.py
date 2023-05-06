@@ -41,7 +41,7 @@ class LinearProbeTable(Generic[K, V]):
         if sizes is not None:
             self.TABLE_SIZES = sizes
         self.size_index = 0
-        self.array:ArrayR[tuple[K, V]] = ArrayR(self.TABLE_SIZES[self.size_index])
+        self.array:ArrayR[tuple[K, V]] = ArrayR(self.TABLE_SIZES[self.size_index]) 
         self.count = 0
 
     def hash(self, key: K) -> int:
@@ -89,10 +89,10 @@ class LinearProbeTable(Generic[K, V]):
                     raise KeyError(key)
             elif self.array[position][0] == key:
                 return position
-            else:
+            else: 
                 # Taken by something else. Time to linear probe.
                 position = (position + 1) % self.table_size
-
+                                                                        
         if is_insert:
             raise FullError("Table is full!")
         else:
