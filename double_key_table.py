@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from typing import Generic, TypeVar, Iterator
-from data_structures.hash_table import LinearProbeTable, FullError
 from data_structures.referential_array import ArrayR
+from data_structures.hash_table import LinearProbeTable, FullError
 
-
+K = TypeVar('K')
 K1 = TypeVar('K1')
 K2 = TypeVar('K2')
 V = TypeVar('V')
@@ -35,22 +35,26 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         :complexity: O(N) where N is the table size.
         __init__(self, sizes=None, internal_sizes=None) , create the underlying array. If sizes is not None, the provided array should replace the existing TABLE_SIZES to decide the size of the top-level hash table. If internal_sizes is not None, the provided array should replace the existing TABLE_SIZES for the internal hash tables
         """
-       
-
         if sizes is not None:
-            self.sizes = sizes # if sizes is not None, the provided array should replace the existing TABLE_SIZES to decide the size of the top-level hash table.
+            self.sizes = sizes
         else:
-            self.sizes = self.TABLE_SIZES  # if sizes is None, the existing TABLE_SIZES should be used to decide the size of the top-level hash table.
+            self.sized = self.HASH_BASE
 
-        if internal_sizes is not None: # If internal_sizes is not None, the provided array should replace the existing TABLE_SIZES for the internal hash tables.
+        if internal_sizes is not None:
             self.internal_sizes = internal_sizes
-        else: # If internal_sizes is None, the existing TABLE_SIZES should be used for the internal hash tables.
-            self.internal_sizes = self.TABLE_SIZES
+        else:
+            self.internal_sizes = self.HASH_BASE
 
         self.size_index = 0 
-        self.array: ArrayR[tuple[K1, K2, V]] = ArrayR(self.sizes[self.size_index]) 
         self.count = 0
-        self.internal_tables = [LinearProbeTable(size) for size in self.internal_sizes]# create the internal hash tables
+        self.array:ArrayR[tuple[K, V]] = ArrayR(self.sizes[self.size_index]) 
+
+    @property
+    def table_size(self) -> int:
+        """
+        Return the current size of the table (different from the length)
+        """
+        return len(self.array)
 
     def hash1(self, key: K1) -> int:
         """
@@ -58,7 +62,6 @@ class DoubleKeyTable(Generic[K1, K2, V]):
 
         :complexity: O(len(key))
         """
-
         value = 0
         a = 31415
         for char in key:
@@ -79,7 +82,7 @@ class DoubleKeyTable(Generic[K1, K2, V]):
             value = (ord(char) + a * value) % sub_table.table_size
             a = a * self.HASH_BASE % (sub_table.table_size - 1)
         return value
-
+    
     def _linear_probe(self, key1: K1, key2: K2, is_insert: bool) -> tuple[int, int]:
         """
         Find the correct position for this key in the hash table using linear probing.
@@ -92,29 +95,32 @@ class DoubleKeyTable(Generic[K1, K2, V]):
 
         Your linear probe method should create the internal hash table if is_insert is true and this is the first pair with key1.
         """
-                    
-        
-        position1 = self.hash1(key1) # Find the correct position for this key in the hash table using linear probing.
+        # Initial position
+        top_level_position = self.hash1(key1)
 
-        for _ in range(len(self.array)):
-            if self.array[position1] is None: # If the position is empty, return the position.
-                if is_insert: 
-                    self.array[position1] = (key1, LinearProbeTable(self.internal_sizes[0]))
-                    position2 = self.hash2(key2, self.array[position1][1])
-                    return (position1, position2)
+        for _ in range(self.table_size):
+            if self.array[top_level_position] is None:
+                # Empty spot. Am I upserting or retrieving?
+                if is_insert:
+                    self.array[top_level_position] = LinearProbeTable(self.internal_sizes[self.size_index])
+                    self.array[top_level_position].hash = lambda k: self.hash2(k, self.array[top_level_position])  # override the hashfuction
+                else:
+                    # item doesn't exist
+                    raise KeyError(key1)
+            elif self.array[top_level_position][0] == key1: # Found the top level position
+                underlying_linear_hash_table = self.array[top_level_position]
+                underlying_linear_hash_table._linear_probe(key2,is_insert)
 
-                else: # raise KeyError if the key pair is not in the table, but is_insert is False.
-                    raise KeyError
+                # found the bottom-level position as well
+                return (top_level_position,underlying_linear_hash_table.position)
+            else: 
+                # Taken by something else. Time to linear probe.
+                position = (position + 1) % self.table_size
 
-            elif self.array[position1][0] == key1: # If the position is not empty, but the key is the same, return the position.
-                position2 = self.hash2(key2, self.array[position1][1])
-                return (position1, position2)
-
-            else: # If the position is not empty, but the key is not the same, move to the next position.
-                position1 = (position1 + 1) % self.table_size
-
-        raise FullError # raise FullError if a table is full and cannot be inserted.
-
+        if is_insert:
+            raise FullError("Table is full!")
+        else:
+            raise KeyError(key1)
         
     def iter_keys(self, key:K1|None=None) -> Iterator[K1|K2]:
         """
@@ -196,7 +202,7 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         :raises KeyError: when the key doesn't exist.
         """
         #Reattempt
-        position1, position2 = self._linear_probe(key, True)
+        position1, position2 = self._linear_probe(key, False)
         return self.array[position1][position2][1]
 
         
@@ -206,21 +212,10 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         Set an (key, value) pair in our hash table.
         
         """
-        #reattempt
-        try:
+        position1, position2 = self._linear_probe(key[0], key[1], True)
+        self.array[position1][position2] = (key[0], data)
 
-            position1, position2 = self._linear_probe(key[0], key[1], False)
-
-        except FullError:
-            self._rehash()
-            self.__setitem__(key, data)
-
-        else:
-            if self.array[position1] is None:
-                self.count += 1
-                
-            self.array[position1][position2] = (key, data)
-
+        
     
 
         
@@ -275,5 +270,38 @@ class DoubleKeyTable(Generic[K1, K2, V]):
 
         
         
+if '__main__' == __name__:
+    
+    # dt = DoubleKeyTable(sizes=[12], internal_sizes=[5])
+    # dt.hash1 = lambda k: ord(k[0]) % 12
+    # dt.hash2 = lambda k, sub_table: ord(k[-1]) % 5
+
+    # print(dt.hash1("Tim"), dt.hash2("Jen"))
+    # print(dt.hash1("Amy"), dt.hash2("Ben"))
+    # print(dt.hash1("May"), dt.hash2("Ben"))
+    # print(dt.hash1("Ivy"), dt.hash2("Jen"))
+    # print(dt.hash1("May"), dt.hash2("Tom"))
+    # print(dt.hash1("Tim"), dt.hash2("Bob"))
+
+    # print(dt.hash1("Tim"))
+    # print(dt.hash1("Amy"))
+    # print(dt.hash1("May"))
+    # print(dt.hash1("Ivy"))
+    # print(dt.hash1("May"))
+    # print(dt.hash1("Tim"))
 
 
+    # dt["Tim", "Jen"] = 1
+    # dt["Amy", "Ben"] = 2
+    # dt["May", "Ben"] = 3
+    # dt["Ivy", "Jen"] = 4
+    # dt["May", "Tom"] = 5
+    # dt["Tim", "Bob"] = 6
+    # self.assertRaises(KeyError, lambda: dt._linear_probe("May", "Jim", False))
+    # self.assertEqual(dt._linear_probe("May", "Jim", True), (6, 1))
+    # dt["May", "Jim"] = 7 # Linear probing on internal table
+    # self.assertEqual(dt._linear_probe("May", "Jim", False), (6, 1))
+    # self.assertRaises(KeyError, lambda: dt._linear_probe("Het", "Liz", False))
+    # self.assertEqual(dt._linear_probe("Het", "Liz", True), (2, 2))
+    # dt["Het", "Liz"] = 8 # Linear probing on external table
+    # self.assertEqual(dt._linear_probe("Het", "Liz", False), (2, 2))
