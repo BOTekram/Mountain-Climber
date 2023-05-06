@@ -2,6 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from mountain import Mountain
 from typing import TYPE_CHECKING, Union
+from data_structures.linked_stack import LinkedStack
 # Avoid circular imports for typing.
 if TYPE_CHECKING:
     from personality import WalkerPersonality
@@ -119,21 +120,35 @@ class Trail:
 
     def follow_path(self, personality: WalkerPersonality) -> None:
         """Follow a path and add mountains according to a personality."""
-        
-        if isinstance(self.store, TrailSplit):
-            if personality.select_branch(self.store.path_top, self.store.path_bottom):
-                self.store = self.store.path_top.store
-            else:
-                self.store = self.store.path_bottom.store
-        elif isinstance(self.store, TrailSeries):
-            self.store = self.store.following.store
-        else:
-            raise ValueError("Cannot follow a path when there is no path to follow!")
+        empty = Trail(None)
 
+        call_stack = LinkedStack()
+        call_stack.push(self)
 
+        # while there are still paths to follow
+        while not call_stack.is_empty():
+            current_trail = call_stack.pop()
 
-
-
+            if isinstance(current_trail.store, TrailSplit):
+                path_top = current_trail.store.path_top
+                path_bottom = current_trail.store.path_bottom
+                following_path = current_trail.store.path_follow
+                # push the trail following the split to the stack
+                if following_path != empty:
+                    call_stack.push(following_path)
+                # choose the trail to take in the split based on personality and push to stack, which is processed immediately
+                if personality.select_branch(path_top, path_bottom):
+                    call_stack.push(path_top)
+                else:
+                    call_stack.push(path_bottom)
+                
+            elif isinstance(current_trail.store, TrailSeries):
+                mountain = current_trail.store.mountain
+                following_path = current_trail.store.following
+                #  adds the mountain which will be passed by the walker, and push the following trail to the stack
+                personality.add_mountain(mountain)
+                if following_path != empty:
+                    call_stack.push(following_path)
         
         
     def collect_all_mountains(self) -> list[Mountain]:
@@ -149,8 +164,4 @@ class Trail:
         Paths are unique if they take a different branch, even if this results in the same set of mountains.
         """
         raise NotImplementedError() #donot touch yet (task 1)
-        
-        
-    
-        
         
