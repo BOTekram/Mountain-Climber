@@ -154,7 +154,20 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         If key = None, return all top-level keys in the hash table
         If key != None, return all low-level keys in the sub-table of top-level key
         """
-        pass
+        
+        if key is None:
+            return [item[0] for item in self.array if item is not None]
+        
+        position = self.hash1(key)
+        if self.array[position] is None:
+            raise KeyError(key)
+        
+        for _ in range(self.table_size):
+            if self.array[position][0] == key:
+                bottom_linear_table = self.array[position][1]
+                return bottom_linear_table.keys()
+            position+=1
+
 
 
     def iter_values(self, key:K1|None=None) -> Iterator[V]:
@@ -176,7 +189,19 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         """
         #If key = None, return all values in all entries of the hash table
         #If key != None, restrict to all values in the sub-table of top-level key
-        pass
+        if key is None:
+            values = []
+            for item in self.array:
+                if item is not None:
+                    values.extend(item[1].values())
+            return values
+
+        position = self.hash1(key)
+        if self.array[position] is None:
+            return self.array[position].values()
+        
+        bottom_linear_table = self.array[position][1]
+        return bottom_linear_table.values()
 
 
     def __contains__(self, key: tuple[K1, K2]) -> bool:
@@ -294,29 +319,6 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         
         
 if '__main__' == __name__:
-    # dt = DoubleKeyTable(sizes=[3, 5], internal_sizes=[3, 5])
-    # dt.hash1 = lambda k: ord(k[0]) % dt.table_size
-    # dt.hash2 = lambda k, sub_table: ord(k[-1]) % sub_table.table_size
-
-    # dt["Tim", "Bob"] = 1
-    # # No resizing yet.
-    # print(dt.table_size== 3)
-    # print(dt._linear_probe("Tim", "Bob", False)== (0, 2))
-    # dt["Tim", "Jen"] = 2
-    # # Internal resize.
-    # print(dt.table_size== 3)
-    # print(dt._linear_probe("Tim", "Bob", False)== (0, 3))
-
-    # # External resize
-    # dt["Pip", "Bob"] = 4
-    # print(dt.table_size== 5)
-    # print(dt._linear_probe("Tim", "Bob", False)== (4, 3))
-    # print(dt._linear_probe("Pip", "Bob", False)== (0, 2))
-
-    # print(dt.table_size)
-    # position = dt.hash1("Pip")
-    # print(dt.array[position][1].table_size)
-
     dt = DoubleKeyTable(sizes=[12], internal_sizes=[5])
     dt.hash1 = lambda k: ord(k[0]) % 12
     dt.hash2 = lambda k, sub_table: ord(k[-1]) % 5
@@ -327,14 +329,14 @@ if '__main__' == __name__:
     dt["Ivy", "Jen"] = 4
     dt["May", "Tom"] = 5
     dt["Tim", "Bob"] = 6
-    print(dt)
-    print(dt._linear_probe("May", "Jim", True)== (6, 1))
-    dt["May", "Jim"] = 7 # Linear probing on internal table
-    print(dt._linear_probe("May", "Jim", False)== (6, 1))
-    print(dt._linear_probe("Het", "Liz", True)== (2, 2))
-    print(dt.size_index)
-    dt["Het", "Liz"] = 8 # Linear probing on external table
-    
-    # print(dt)
-    # print(dt._linear_probe("Het", "Liz", False)== (2, 2))
+    dt["May", "Jim"] = 7
+    dt["Het", "Liz"] = 8
+
+    print(set(dt.keys()))
+    print(set(dt.keys())== {"Tim", "Amy", "May", "Ivy", "Het"})
+    print(dt.keys("May"))
+    print(set(dt.keys("May"))== {"Ben", "Tom", "Jim"})
+    print(dt.values())
+    print(set(dt.values())== {1, 2, 3, 4, 5, 6, 7, 8})
+    print(set(dt.values("Tim"))== {1, 6})
 
