@@ -234,6 +234,10 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         bottom_linear_table = self.array[position1][1]
         del bottom_linear_table[key2]
         self.count-=1
+
+        # If the bottom table is empty, set the top table to None.
+        if bottom_linear_table.is_empty():
+            self.array[position1] = None
         
     def _rehash(self) -> None:
         """
@@ -278,21 +282,5 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         
         
 if '__main__' == __name__:
-    # Double hash table
-    dt = DoubleKeyTable(sizes=[12], internal_sizes=[5])
-    dt.hash1 = lambda k: ord(k[0]) % 12
-    dt.hash2 = lambda k, sub_table: ord(k[-1]) % 5
-
-    dt["Tim", "Jen"] = 1
-    dt["Amy", "Ben"] = 2
-    dt["May", "Ben"] = 3
-    dt["Ivy", "Jen"] = 4
-    dt["May", "Tom"] = 5
-    dt["Tim", "Bob"] = 6
-
-    print(dt)
-
-    del dt["Tim", "Bob"]
-    print("After: ")
-    print(dt)
+    pass
 
