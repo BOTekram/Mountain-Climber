@@ -38,23 +38,16 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         if sizes is not None:
             self.sizes = sizes
         else:
-            self.sized = self.HASH_BASE
+            self.sized = self.TABLE_SIZES
 
         if internal_sizes is not None:
             self.internal_sizes = internal_sizes
         else:
-            self.internal_sizes = self.HASH_BASE
+            self.internal_sizes = self.TABLE_SIZES
 
         self.size_index = 0 
         self.count = 0
         self.array:ArrayR[tuple[K, V]] = ArrayR(self.sizes[self.size_index]) 
-
-    @property
-    def table_size(self) -> int:
-        """
-        Return the current size of the table (different from the length)
-        """
-        return len(self.array)
 
     def hash1(self, key: K1) -> int:
         """
@@ -129,7 +122,6 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         key = k:
             Returns an iterator of all keys in the bottom-hash-table for k.
         """
-
         if key is None:
             for i in range(len(self.array)):
                 if self.array[i] is not None:
@@ -201,10 +193,10 @@ class DoubleKeyTable(Generic[K1, K2, V]):
 
         :raises KeyError: when the key doesn't exist.
         """
-        #Reattempt
-        position1, position2 = self._linear_probe(key, False)
+        key1, key2 = key
+        position1, position2 = self._linear_probe(key1, key2, False)
         return self.array[position1][position2][1]
-
+        
         
 
     def __setitem__(self, key: tuple[K1, K2], data: V) -> None:
@@ -243,13 +235,12 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         """
         
         
-        
-
+    @property
     def table_size(self) -> int:
         """
         Return the current size of the table (different from the length)
         """
-        
+        return len(self.array)
 
         
 
@@ -257,6 +248,7 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         """
         Returns number of elements in the hash table
         """
+        return self.count
        
 
     
