@@ -101,6 +101,7 @@ class DoubleKeyTable(Generic[K1, K2, V]):
                     new_linear_hash_table.hash = lambda k: self.hash2(k, new_linear_hash_table) 
                     # set value to array position
                     self.array[top_array_position] = (key1,new_linear_hash_table)
+                    self.count+=1
                     # find bottom array position
                     bottom_array_position = new_linear_hash_table._linear_probe(key2,is_insert)
                     return (top_array_position, bottom_array_position)
@@ -215,7 +216,6 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         # set value to array positions
         bottom_linear_table = self.array[position1][1]
         bottom_linear_table[key2] = data
-        self.count += 1
 
         if len(self) > self.table_size / 2:
             self._rehash()
@@ -247,7 +247,19 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         :complexity worst: O(N*hash(K) + N^2*comp(K)) Lots of probing.
         Where N is len(self)
         """
-        pass
+        old_array = self.array
+        self.size_index += 1
+        if self.size_index == len(self.TABLE_SIZES):
+            # Cannot be resized further.
+            return
+        self.array = ArrayR(self.TABLE_SIZES[self.size_index])
+        self.count = 0
+        for item in old_array:
+            if item is not None:
+                key1, bottom_linear_table = item
+                position = self.hash1(key1)
+                self.array[position] = item
+                self.count+=1
         
         
     @property
@@ -282,5 +294,47 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         
         
 if '__main__' == __name__:
-    pass
+    # dt = DoubleKeyTable(sizes=[3, 5], internal_sizes=[3, 5])
+    # dt.hash1 = lambda k: ord(k[0]) % dt.table_size
+    # dt.hash2 = lambda k, sub_table: ord(k[-1]) % sub_table.table_size
+
+    # dt["Tim", "Bob"] = 1
+    # # No resizing yet.
+    # print(dt.table_size== 3)
+    # print(dt._linear_probe("Tim", "Bob", False)== (0, 2))
+    # dt["Tim", "Jen"] = 2
+    # # Internal resize.
+    # print(dt.table_size== 3)
+    # print(dt._linear_probe("Tim", "Bob", False)== (0, 3))
+
+    # # External resize
+    # dt["Pip", "Bob"] = 4
+    # print(dt.table_size== 5)
+    # print(dt._linear_probe("Tim", "Bob", False)== (4, 3))
+    # print(dt._linear_probe("Pip", "Bob", False)== (0, 2))
+
+    # print(dt.table_size)
+    # position = dt.hash1("Pip")
+    # print(dt.array[position][1].table_size)
+
+    dt = DoubleKeyTable(sizes=[12], internal_sizes=[5])
+    dt.hash1 = lambda k: ord(k[0]) % 12
+    dt.hash2 = lambda k, sub_table: ord(k[-1]) % 5
+
+    dt["Tim", "Jen"] = 1
+    dt["Amy", "Ben"] = 2
+    dt["May", "Ben"] = 3
+    dt["Ivy", "Jen"] = 4
+    dt["May", "Tom"] = 5
+    dt["Tim", "Bob"] = 6
+    print(dt)
+    print(dt._linear_probe("May", "Jim", True)== (6, 1))
+    dt["May", "Jim"] = 7 # Linear probing on internal table
+    print(dt._linear_probe("May", "Jim", False)== (6, 1))
+    print(dt._linear_probe("Het", "Liz", True)== (2, 2))
+    print(dt.size_index)
+    dt["Het", "Liz"] = 8 # Linear probing on external table
+    
+    # print(dt)
+    # print(dt._linear_probe("Het", "Liz", False)== (2, 2))
 
