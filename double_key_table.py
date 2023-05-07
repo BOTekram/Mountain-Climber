@@ -200,7 +200,8 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         """
         key1, key2 = key
         position1, position2 = self._linear_probe(key1, key2, False) # raises key error if one of the keys doesn't exist
-        return self.array[position1][position2][1]
+        bottom_table = self.array[position1][1]
+        return bottom_table[key2]
         
         
     def __setitem__(self, key: tuple[K1, K2], data: V) -> None:
@@ -226,8 +227,13 @@ class DoubleKeyTable(Generic[K1, K2, V]):
 
         :raises KeyError: when the key doesn't exist.
         """
-        pass 
-
+        key1, key2 = key
+        # Find the position of the key.
+        # If it doesn't exist, raise an error.
+        position1, position2 = self._linear_probe(key1, key2, False)
+        bottom_linear_table = self.array[position1][1]
+        del bottom_linear_table[key2]
+        self.count-=1
         
     def _rehash(self) -> None:
         """
@@ -261,40 +267,32 @@ class DoubleKeyTable(Generic[K1, K2, V]):
 
         Not required but may be a good testing tool.
         """
-        pass
+        result = ""
+        for item in self.array:
+            if item is not None:
+                (key, bottom_table) = item
+                result += f"{key}: \n"
+                result += bottom_table.__str__() + "\n"
+        return result
 
         
         
 if '__main__' == __name__:
-    # linear table
-    linear_table = LinearProbeTable([5, 13, 29, 53, 97, 193, 389, 769, 1543, 3079, 6151, 12289, 24593, 49157, 98317, 196613, 393241, 786433, 1572869])
-    # setting items(will rehash automatically if full)
-    linear_table['Jim'] = 1
-    linear_table['Tom'] = 3
-    linear_table['Tim'] = 4
-    linear_table['Tam'] = 3
-    # overwriting value
-    linear_table['Jim'] = 2
-    # deleting item
-    del linear_table['Jim']
-    # contains
-    print("Jim" in linear_table)  # False
-    # return all keys in table
-    print(linear_table.keys())  # ['Tim', 'Tom', 'Tam']
-    # return all values in table
-    print(linear_table.values())  # [4, 3, 3]
-    # length of table (number of elements)
-    print(len(linear_table))  # 3
-    # print all contents of table
-    print(linear_table)
-    # get hash value of key
-    linear_table.hash('Jim')  # 0
-    # get table size (size of array)
-    print(linear_table.table_size)  # 13
-    # is empty
-    print(linear_table.is_empty())  # False
-    # is full
-    print(linear_table.is_full()) # False
-    # linear probe
-    # linear_table._linear_probe('Jim', False)  # keyError
-    print(linear_table._linear_probe('Jim', True)) # 4 
+    # Double hash table
+    dt = DoubleKeyTable(sizes=[12], internal_sizes=[5])
+    dt.hash1 = lambda k: ord(k[0]) % 12
+    dt.hash2 = lambda k, sub_table: ord(k[-1]) % 5
+
+    dt["Tim", "Jen"] = 1
+    dt["Amy", "Ben"] = 2
+    dt["May", "Ben"] = 3
+    dt["Ivy", "Jen"] = 4
+    dt["May", "Tom"] = 5
+    dt["Tim", "Bob"] = 6
+
+    print(dt)
+
+    del dt["Tim", "Bob"]
+    print("After: ")
+    print(dt)
+
