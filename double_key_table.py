@@ -132,18 +132,7 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         key = k:
             Returns an iterator of all keys in the bottom-hash-table for k.
         """
-        # if key is None:
-        #     for i in range(len(self.array)):
-        #         if self.array[i] is not None:
-        #             yield self.array[i][0]
-        # else:
-        #     for i in range(len(self.array)):
-        #         if self.array[i] is not None:
-        #             if self.array[i][0] == key:
-        #                 for j in range(len(self.array[i][1])):
-        #                     if self.array[i][1][j] is not None:
-        #                         yield self.array[i][1][j][0]
-        pass
+        return KeyIterator(self,key)
 
 
     def keys(self, key:K1|None=None) -> list[K1]:
@@ -178,9 +167,7 @@ class DoubleKeyTable(Generic[K1, K2, V]):
             Returns an iterator of all values in the bottom-hash-table for k.
         
         """
-        #return an iterator that yields the keys/values one by one rather than searching the entire table at the start.
-        pass
-
+        return ValueIterator(self,key)
       
     def values(self, key:K1|None=None) -> list[V]:
         """
@@ -315,28 +302,66 @@ class DoubleKeyTable(Generic[K1, K2, V]):
                 result += f"{key}: \n"
                 result += bottom_table.__str__() + "\n"
         return result
+    
+    def _linear_probe_top_search(self,key1) -> int:
+        # Initial position
+        position = self.hash1(key1)
 
+        for _ in range(self.table_size):
+            if self.array[position] is None:
+                raise KeyError(key1)
+            elif self.array[position][0] == key1:
+                return position
+            else: 
+                # Taken by something else. Time to linear probe.
+                position = (position + 1) % self.table_size
+        raise KeyError(key1)
+    
+class KeyIterator:
+    """ A full-blown iterator for iter_keys.
+    """
+    def __init__(self,double_key_table: DoubleKeyTable, key:K1|None=None) -> None:
+        self.key = key
+        self.current = 0
+        self.double_key_table = double_key_table
+       
+    def __iter__(self):
+        """ Returns itself, as required to be iterable. """
+        return self
+
+    def __next__(self) -> K:
+        key_list = self.double_key_table.keys(self.key)
+        while self.current < len(key_list):
+             key = key_list[self.current]
+             self.current += 1
+             return key
+        else:
+            raise StopIteration
         
+class ValueIterator:
+    """ A full-blown iterator for iter_values.
+"""
+    def __init__(self,double_key_table: DoubleKeyTable, key:K1|None=None) -> None:
+        self.key = key
+        self.current = 0
+        self.double_key_table = double_key_table
+       
+    def __iter__(self):
+        """ Returns itself, as required to be iterable. """
+        return self
+
+    def __next__(self) -> V:
+        value_list = self.double_key_table.values(self.key)
+        while self.current < len(value_list):
+             value = value_list[self.current]
+             self.current += 1
+             return value
+        else:
+            raise StopIteration
         
 if '__main__' == __name__:
-    dt = DoubleKeyTable(sizes=[12], internal_sizes=[5])
-    dt.hash1 = lambda k: ord(k[0]) % 12
-    dt.hash2 = lambda k, sub_table: ord(k[-1]) % 5
-
-    dt["Tim", "Jen"] = 1
-    dt["Amy", "Ben"] = 2
-    dt["May", "Ben"] = 3
-    dt["Ivy", "Jen"] = 4
-    dt["May", "Tom"] = 5
-    dt["Tim", "Bob"] = 6
-    dt["May", "Jim"] = 7
-    dt["Het", "Liz"] = 8
-
-    print(set(dt.keys()))
-    print(set(dt.keys())== {"Tim", "Amy", "May", "Ivy", "Het"})
-    print(dt.keys("May"))
-    print(set(dt.keys("May"))== {"Ben", "Tom", "Jim"})
-    print(dt.values())
-    print(set(dt.values())== {1, 2, 3, 4, 5, 6, 7, 8})
-    print(set(dt.values("Tim"))== {1, 6})
+    dt = DoubleKeyTable()
+    dt["May", "Jim"] = 1
+    dt["Kim", "Tim"] = 2
+    dt["Kim", "Tam"] = 3
 
