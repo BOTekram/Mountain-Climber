@@ -223,3 +223,37 @@ class LinearProbeTable(Generic[K, V]):
                 (key, value) = item
                 result += "(" + str(key) + "," + str(value) + ")\n"
         return result
+    
+if '__main__' == __name__:
+    # linear table
+    linear_table = LinearProbeTable([5, 13, 29, 53, 97, 193, 389, 769, 1543, 3079, 6151, 12289, 24593, 49157, 98317, 196613, 393241, 786433, 1572869])
+    # setting items(will rehash automatically if full)
+    linear_table['Jim'] = 1
+    linear_table['Tom'] = 3
+    linear_table['Tim'] = 4
+    linear_table['Tam'] = 3
+    # overwriting value
+    linear_table['Jim'] = 2
+    # deleting item
+    del linear_table['Jim']
+    # contains
+    print("Jim" in linear_table)  # False
+    # return all keys in table
+    print(linear_table.keys())  # ['Tim', 'Tom', 'Tam']
+    # return all values in table
+    print(linear_table.values())  # [4, 3, 3]
+    # length of table (number of elements)
+    print(len(linear_table))  # 3
+    # print all contents of table
+    print(linear_table)
+    # get hash value of key
+    linear_table.hash('Jim')  # 0
+    # get table size (size of array)
+    print(linear_table.table_size)  # 13
+    # is empty
+    print(linear_table.is_empty())  # False
+    # is full
+    print(linear_table.is_full()) # False
+    # linear probe
+    # linear_table._linear_probe('Jim', False)  # keyError
+    print(linear_table._linear_probe('Jim', True)) # 4 
