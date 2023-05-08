@@ -174,8 +174,6 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         key = None: returns all values in the table.
         key = x: returns all values for top-level key x.
         """
-        #If key = None, return all values in all entries of the hash table
-        #If key != None, restrict to all values in the sub-table of top-level key
         if key is None:
             values = []
             for item in self.array:
@@ -340,7 +338,7 @@ class KeyIterator:
         
 class ValueIterator:
     """ A full-blown iterator for iter_values.
-"""
+    """
     def __init__(self,double_key_table: DoubleKeyTable, key:K1|None=None) -> None:
         self.key = key
         self.current = 0
@@ -359,9 +357,3 @@ class ValueIterator:
         else:
             raise StopIteration
         
-if '__main__' == __name__:
-    dt = DoubleKeyTable()
-    dt["May", "Jim"] = 1
-    dt["Kim", "Tim"] = 2
-    dt["Kim", "Tam"] = 3
-
