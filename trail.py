@@ -153,7 +153,37 @@ class Trail:
         
     def collect_all_mountains(self) -> list[Mountain]:
         """Returns a list of all mountains on the trail."""
-        raise NotImplementedError() #donot touch yet (task 1)
+        empty = Trail(None)
+        mountain_list = []
+
+        call_stack = LinkedStack()
+        call_stack.push(self)
+
+        # while there are still paths to follow
+        while not call_stack.is_empty():
+            current_trail = call_stack.pop()
+
+            if isinstance(current_trail.store, TrailSplit):
+                path_top = current_trail.store.path_top
+                path_bottom = current_trail.store.path_bottom
+                following_path = current_trail.store.path_follow
+                
+                if following_path != empty:
+                    call_stack.push(following_path)
+                if path_bottom != empty:
+                    call_stack.push(path_bottom)
+                if path_top != empty:
+                    call_stack.push(path_top)
+                
+            elif isinstance(current_trail.store, TrailSeries):
+                mountain = current_trail.store.mountain
+                following_path = current_trail.store.following
+
+                if following_path != empty:
+                    call_stack.push(following_path)
+                mountain_list.append(mountain)
+
+        return mountain_list
         
 
     def length_k_paths(self, k) -> list[list[Mountain]]: # Input to this should not exceed k > 50, at most 5 branches.
@@ -163,5 +193,60 @@ class Trail:
 
         Paths are unique if they take a different branch, even if this results in the same set of mountains.
         """
-        raise NotImplementedError() #donot touch yet (task 1)
+        total_path = self.search_all_path()
+        length_k_path = [path for path in total_path if len(path) == k]
+
+        return length_k_path
+
+    def search_all_path(self) -> list[list[Mountain]]:
+        """
+        Helper function for length_k_paths.
+        """
+        current_trail = self
+
+        if current_trail == Trail(None):
+            return [[]]
+        elif isinstance(current_trail.store, TrailSplit):
+            trail_top = current_trail.store.path_top
+            trail_bottom = current_trail.store.path_bottom
+            trail_follow = current_trail.store.path_follow
+
+            all_path_top = trail_top.search_all_path()  # [[Mountain]]
+            all_path_bottom = trail_bottom.search_all_path()
+            all_path_follow = trail_follow.search_all_path()
+            
+            total_path = self.extend_list(all_path_top, all_path_bottom,True)
+            total_path = self.extend_list(total_path, all_path_follow,False)
+
+            return total_path
+        elif isinstance(current_trail.store, TrailSeries):
+            initial_mountain = current_trail.store.mountain
+            trail_follow = current_trail.store.following
+
+            call_stack = LinkedStack()
+            total_path = [[initial_mountain]]
+            call_stack.push(trail_follow)
+
+            while not call_stack.is_empty():
+                current_trail = call_stack.pop()
+                total_path = self.extend_list(total_path, current_trail.search_all_path(),False)
+            return total_path
         
+
+
+    def extend_list(self, first_part: list[list[Mountain]], second_part: list[list[Mountain]], is_join) -> list[list[Mountain]]:
+        """
+        Return all combination of paths from first part and second part
+        Example: 
+        first_part = [[a],[b]]
+        second_part = [[c,d],[e]]
+        if is_join is True, just extends
+            return [[a],[b],[c,d],[e]]
+        else
+            return [[a,c,d],[a,e],[b,c,d],[b,e]]
+        """
+        if is_join:
+            first_part.extend(second_part)
+            return first_part
+        else:
+            return [first + second for first in first_part for second in second_part] # all combination
