@@ -153,7 +153,37 @@ class Trail:
         
     def collect_all_mountains(self) -> list[Mountain]:
         """Returns a list of all mountains on the trail."""
-        raise NotImplementedError() #donot touch yet (task 1)
+        empty = Trail(None)
+        mountain_list = []
+
+        call_stack = LinkedStack()
+        call_stack.push(self)
+
+        # while there are still paths to follow
+        while not call_stack.is_empty():
+            current_trail = call_stack.pop()
+
+            if isinstance(current_trail.store, TrailSplit):
+                path_top = current_trail.store.path_top
+                path_bottom = current_trail.store.path_bottom
+                following_path = current_trail.store.path_follow
+                
+                if following_path != empty:
+                    call_stack.push(following_path)
+                if path_bottom != empty:
+                    call_stack.push(path_bottom)
+                if path_top != empty:
+                    call_stack.push(path_top)
+                
+            elif isinstance(current_trail.store, TrailSeries):
+                mountain = current_trail.store.mountain
+                following_path = current_trail.store.following
+
+                if following_path != empty:
+                    call_stack.push(following_path)
+                mountain_list.append(mountain)
+
+        return mountain_list
         
 
     def length_k_paths(self, k) -> list[list[Mountain]]: # Input to this should not exceed k > 50, at most 5 branches.
@@ -163,5 +193,150 @@ class Trail:
 
         Paths are unique if they take a different branch, even if this results in the same set of mountains.
         """
-        raise NotImplementedError() #donot touch yet (task 1)
+        empty = Trail(None)
+        mountain_list = []
+
+        call_stack = LinkedStack()
+        call_stack.push(self)
+
+        # while there are still paths to follow
+        while not call_stack.is_empty():
+            current_trail = call_stack.pop()
+
+            if isinstance(current_trail.store, TrailSplit):
+                mountain_list.append("split")
+                path_top = current_trail.store.path_top
+                path_bottom = current_trail.store.path_bottom
+                following_path = current_trail.store.path_follow
+                
+                if following_path != empty:
+                    call_stack.push(following_path)
+                if path_bottom != empty:
+                    call_stack.push(path_bottom)
+                if path_top != empty:
+                    call_stack.push(path_top)
+                
+            elif isinstance(current_trail.store, TrailSeries):
+                all_mount_in_series = current_trail.collect_all_mountains()
+
+        print(mountain_list)
         
+        for list_mountain in self.collect_all_mountains():
+            print(list_mountain)
+        print(self.collect_all_mountains())
+
+
+
+
+
+                
+             
+                
+    def collect_all_mount_series(self):
+        empty = Trail(None)
+        mountain_list = []
+        next_split = None
+
+        call_stack = LinkedStack()
+        call_stack.push(self)
+
+        # while there are still paths to follow
+        while not call_stack.is_empty():
+            current_trail = call_stack.pop()
+
+            if isinstance(current_trail.store, TrailSplit):
+                next_split = current_trail
+                
+            elif isinstance(current_trail.store, TrailSeries):
+                mountain = current_trail.store.mountain
+                following_path = current_trail.store.following
+                mountain_list.append(mountain)
+                if following_path != empty:
+                    call_stack.push(following_path)
+                else:
+                    mountain_list.append([])
+                    
+        return (mountain_list,next_split)
+    
+
+    def collect_all_mount_split(self):
+        assert isinstance(self.store, TrailSplit)
+
+        paths = [self.store.path_top,self.store.path_bottom,self.store.path_follow]
+
+        is_all_mount = False
+        while not is_all_mount:
+            for i in range(3):
+                if paths[i] == Trail(None):
+                    paths[i] = []
+                elif isinstance(paths[i], TrailSeries):
+                    paths[i] = paths[i].collect_all_mount_series()
+                elif  isinstance(paths[i], TrailSplit):
+                    paths[i] = paths[i].collect_all_mount_split()
+
+            for i in range(3):
+                is_all_mount = True
+                if not isinstance(paths[i], Mountain):
+                    is_all_mount = False
+
+        
+        print(paths)
+
+        mount_list = paths[:-1]
+        fol_path = paths[-1]
+        mount_list = [path.extend(fol_path) for path in mount_list]
+        
+        return mount_list
+        
+
+
+
+
+
+
+    
+
+
+    
+
+        
+if '__main__' == __name__:
+    top_top = Mountain("top-top", 5, 3)
+    top_bot = Mountain("top-bot", 3, 5)
+    top_mid = Mountain("top-mid", 4, 7)
+    bot_one = Mountain("bot-one", 2, 5)
+    bot_two = Mountain("bot-two", 0, 0)
+    final   = Mountain("final", 4, 4)
+    trail = Trail(TrailSplit(
+        Trail(TrailSplit(
+            Trail(TrailSeries(top_top, Trail(None))),
+            Trail(TrailSeries(top_bot, Trail(None))),
+            Trail(TrailSeries(top_mid, Trail(None))),
+        )),
+        Trail(TrailSeries(bot_one, Trail(TrailSplit(
+            Trail(TrailSeries(bot_two, Trail(None))),
+            Trail(None),
+            Trail(None),
+        )))),
+        Trail(TrailSeries(final, Trail(None)))
+    ))
+    trail_series = Trail(TrailSeries(top_top, Trail(TrailSeries(top_mid,Trail(TrailSplit(
+            Trail(TrailSeries(bot_two, Trail(None))),
+            Trail(None),
+            Trail(None),
+        ))))))
+    
+    trail_split = Trail(TrailSplit(
+            Trail(TrailSeries(bot_two, Trail(None))),
+            Trail(None),
+            Trail(None),
+        ))
+
+    # res = trail.length_k_paths(3)
+    res = trail_series.collect_all_mount_series()
+    # print(res[0])
+    next_split = res[1]
+    print(next_split.collect_all_mount_split())
+    # res = trail_split.collect_all_mount_split()
+    # print(res[0])
+    # print(res[1])
