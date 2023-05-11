@@ -46,6 +46,7 @@ class InfiniteHashTable(Generic[K, V]):
             _ = self.table[key]
         except KeyError:
             self.count+=1
+
         self.table[key] = value
 
     def __delitem__(self, key: K) -> None:
@@ -54,7 +55,8 @@ class InfiniteHashTable(Generic[K, V]):
 
         :raises KeyError: when the key doesn't exist.
         """
-        pass
+        del self.table[key]
+        self.count-=1
 
     def __len__(self):
         return self.count
@@ -128,13 +130,16 @@ class Subtable():
     def __setitem__(self, key: K, value: V) -> None:
         """
         Set an (key, value) pair in our hash table.
-        Return true if a new key is inserted.
         """
+        try:
+            self.get_position_seq(key)  # raises KeyError if key doesnt exist
+        except KeyError:
+            self.count+=1
+
         position = self.hash(key)
         # base case 1
         if self.array[position] is None:
             self.array[position] = (key,value)
-            self.count += 1
         
         old_key, old_value = self.array[position]
         if not isinstance(old_value,Subtable):
@@ -173,29 +178,24 @@ class Subtable():
             # continue searching
             sub_table = old_value
             return [position] + sub_table.get_position_seq(key)
+        
+    def __delitem__(self,key):
+        pos_seq = self.get_position_seq(key)  # raises KeyError if key doesnt exist
+        
+        next_position = pos_seq[0]
+        if len(pos_seq) == 1: # no subtable, just delete
+            self.array[next_position] = None
+        else:
+            next_subtable = self.array[next_position][1]
+            # print(next_subtable.count,"here")
+            # for item in next_subtable.array:
+            #     print(next_subtable.count,"here",item,next_subtable.level)
+            del next_subtable[key]
+            next_subtable.count-=1
 
-if '__main__' == __name__:
-    ih = InfiniteHashTable()
-    ih["lin"] = 1
-    ih["leg"] = 2
-    print(ih.get_location("lin"))
-    print(ih.get_location("lin")== [4, 1])
-    print(ih.get_location("leg")== [4, 23])
-    print(len(ih)== 2)
-    ih["mine"] = 3
-    ih["linked"] = 4
-    print(ih.get_location("mine")== [5])
-    print(ih.get_location("lin")== [4, 1, 6, 26])
-    print(ih.get_location("linked")== [4, 1, 6, 3])
-    print(len(ih), 4)
-    ih["limp"] = 5
-    ih["mining"] = 6
-    print(ih.get_location("limp")== [4, 1, 5])
-    print(ih.get_location("mine")== [5, 1, 6, 23])
-    print(ih.get_location("mining")== [5, 1, 6, 1])
-    print(len(ih), 6)
-    ih["jake"] = 7
-    ih["linger"] = 8
-    print(ih.get_location("jake")== [2])
-    print(ih.get_location("linger")== [4, 1, 6, 25])
-    print(len(ih)== 8)
+            if next_subtable.count == 1:
+                for item in next_subtable.array:
+                    if item is not None:
+                        old_key_value_tuple = item
+                        break
+                self.array[next_position] = old_key_value_tuple
