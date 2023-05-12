@@ -201,8 +201,7 @@ class Trail:
 
         Paths are unique if they take a different branch, even if this results in the same set of mountains.
 
-        Best Time Complexity: O(n^k) where n is the number of branches and k is the length of the path
-        Worst Time Complexity: O(n^k) where n is the number of branches and k is the length of the path
+        :time Complexity: O(Comp(search_all_path) + n) where n is the total number of possible paths.
         """
         total_path = self.search_all_path()
         length_k_path = [path for path in total_path if len(path) == k]
@@ -258,7 +257,7 @@ class Trail:
         else
             return [[a,c,d],[a,e],[b,c,d],[b,e]]
 
-        Best Time Complexity: O(n^2) where n is the number of branches
+        Best Time Complexity: O(Comp(extend(secondpart)) 
         Worst Time Complexity: O(n^2) where n is the number of branches
         """
         if is_join:
