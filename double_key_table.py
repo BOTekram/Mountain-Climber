@@ -276,6 +276,7 @@ class DoubleKeyTable(Generic[K1, K2, V]):
     def table_size(self) -> int:
         """
         Return the current size of the table (different from the length)
+        :complexity: O(1)
         """
         return len(self.array)
         
@@ -283,6 +284,7 @@ class DoubleKeyTable(Generic[K1, K2, V]):
     def __len__(self) -> int:
         """
         Returns number of elements in the hash table
+        :complexity: O(1)
         """
         return self.count
        
@@ -292,6 +294,8 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         String representation.
 
         Not required but may be a good testing tool.
+        :complexity: O(N)
+        N is the size of the table.
         """
         result = ""
         for item in self.array:
@@ -302,6 +306,13 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         return result
     
     def _linear_probe_top_search(self,key1) -> int:
+        """
+        Linear probe for top level search.
+        :raises KeyError: when the key doesn't exist.
+        :complexity best: O(1) No probing.
+        :complexity worst: O(N) Lots of probing.
+        N is the size of the table.
+        """
         # Initial position
         position = self.hash1(key1)
 
@@ -328,6 +339,12 @@ class KeyIterator:
         return self
 
     def __next__(self) -> K:
+        """ Returns the next value, as required to be iterable.
+        Raise StioIteration if there are no more values or next key doesn't exist.
+        :complexity best: O(keys(K)) No probing.
+        :complexity worst: O(N*keys(K)) Lots of probing.
+        N is the size of the table.
+        """
         key_list = self.double_key_table.keys(self.key)
         while self.current < len(key_list):
              key = key_list[self.current]
@@ -345,10 +362,18 @@ class ValueIterator:
         self.double_key_table = double_key_table
        
     def __iter__(self):
-        """ Returns itself, as required to be iterable. """
+        """ Returns itself, as required to be iterable.
+        :complexity: O(1)
+        """
         return self
 
     def __next__(self) -> V:
+        """ Returns the next value, as required to be iterable.
+        Raise StioIteration if there are no more values or next key doesn't exist.
+        :complexity best: O(values(K)) No probing.
+        :complexity worst: O(N*values(K)) Lots of probing.
+        N is the size of the table.
+        """
         value_list = self.double_key_table.values(self.key)
         while self.current < len(value_list):
              value = value_list[self.current]

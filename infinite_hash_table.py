@@ -161,6 +161,10 @@ class Subtable():
             sub_table[key] = value
     
     def get_position_seq(self,key) -> list[int]:
+        """
+        Get the sequence of positions required to access this key.
+        :raises KeyError: when the key doesn't exist.
+        """
         position = self.hash(key)
         # base case 1
         if self.array[position] is None:
@@ -180,6 +184,10 @@ class Subtable():
             return [position] + sub_table.get_position_seq(key)
         
     def __delitem__(self,key):
+        """
+        Deletes a (key, value) pair in our hash table.
+        :raises KeyError: when the key doesn't exist.
+        """
         pos_seq = self.get_position_seq(key)  # raises KeyError if key doesnt exist
         
         next_position = pos_seq[0]
