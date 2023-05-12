@@ -119,7 +119,11 @@ class Trail:
     
 
     def follow_path(self, personality: WalkerPersonality) -> None:
-        """Follow a path and add mountains according to a personality."""
+        """
+        Follow a path and add mountains according to a personality.
+        Best Time Complexity: O(n)
+        Worst Time Complexity: O(n)
+        """
         empty = Trail(None)
 
         call_stack = LinkedStack()
@@ -152,7 +156,11 @@ class Trail:
         
         
     def collect_all_mountains(self) -> list[Mountain]:
-        """Returns a list of all mountains on the trail."""
+        """
+        Returns a list of all mountains on the trail.
+        Best Time Complexity: O(n)
+        Worst Time Complexity: O(n)
+        """
         empty = Trail(None)
         mountain_list = []
 
@@ -192,6 +200,9 @@ class Trail:
         Paths are represented as lists of mountains.
 
         Paths are unique if they take a different branch, even if this results in the same set of mountains.
+
+        Best Time Complexity: O(n^k) where n is the number of branches and k is the length of the path
+        Worst Time Complexity: O(n^k) where n is the number of branches and k is the length of the path
         """
         total_path = self.search_all_path()
         length_k_path = [path for path in total_path if len(path) == k]
@@ -201,6 +212,8 @@ class Trail:
     def search_all_path(self) -> list[list[Mountain]]:
         """
         Helper function for length_k_paths.
+        Best Time Complexity: O(n^k) where n is the number of branches and k is the length of the path
+        Worst Time Complexity: O(n^k) where n is the number of branches and k is the length of the path
         """
         current_trail = self
 
@@ -244,6 +257,9 @@ class Trail:
             return [[a],[b],[c,d],[e]]
         else
             return [[a,c,d],[a,e],[b,c,d],[b,e]]
+
+        Best Time Complexity: O(n^2) where n is the number of branches
+        Worst Time Complexity: O(n^2) where n is the number of branches
         """
         if is_join:
             first_part.extend(second_part)
