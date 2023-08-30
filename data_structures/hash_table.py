@@ -3,9 +3,8 @@
 Defines a Hash Table using Linear Probing for conflict resolution.
 """
 from __future__ import annotations
-__author__ = 'Jackson Goerner'
+__author__ = 'Ekramul Islam'
 __since__ = '07/02/2023'
-
 
 from typing import TypeVar, Generic
 from data_structures.referential_array import ArrayR

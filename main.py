@@ -1,8 +1,3 @@
-"""
-File for creating the GUI.
-Requires no student import, but will use your implemented classes as part of it's process!
-"""
-
 import arcade
 import arcade.gui as gui
 import json
